@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Financeiro · Rossi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#ebebea;
+  --txt:#1a1a18;--txt2:#6b6b68;--txt3:#a0a09c;
+  --brd:rgba(0,0,0,0.1);--brd2:rgba(0,0,0,0.18);
+  --accent:#1D9E75;--accent-bg:#E1F5EE;--accent-txt:#085041;
+  --warn:#BA7517;--warn-bg:#FAEEDA;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;
+  --bruno:#185FA5;--bruno-bg:#E6F1FB;--bruno-txt:#0C447C;
+  --mari:#993556;--mari-bg:#FBEAF0;--mari-txt:#72243E;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--rl:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#252523;--bg3:#2e2e2b;
+    --txt:#f0f0ec;--txt2:#a0a09c;--txt3:#6b6b68;
+    --brd:rgba(255,255,255,0.1);--brd2:rgba(255,255,255,0.18);
+    --accent:#5DCAA5;--accent-bg:#04342C;--accent-txt:#9FE1CB;
+    --warn:#EF9F27;--warn-bg:#412402;
+    --danger:#E24B4A;--danger-bg:#501313;
+    --bruno:#378ADD;--bruno-bg:#042C53;--bruno-txt:#B5D4F4;
+    --mari:#D4537E;--mari-bg:#4B1528;--mari-txt:#F4C0D1;
+  }
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--font);}
+.app{max-width:640px;margin:0 auto;padding:1rem 1rem 4rem;}
+
+/* header */
+.header{margin-bottom:1.25rem;display:flex;align-items:flex-start;justify-content:space-between;}
+.header h1{font-size:18px;font-weight:500;letter-spacing:-0.02em;}
+.header p{font-size:13px;color:var(--txt2);margin-top:2px;}
+.sync-btn{background:none;border:0.5px solid var(--brd2);border-radius:var(--r);padding:6px 12px;font-size:12px;font-family:var(--font);color:var(--txt2);cursor:pointer;white-space:nowrap;}
+.sync-btn:hover{background:var(--bg2);}
+.sync-btn.syncing{opacity:0.5;pointer-events:none;}
+.sync-status{font-size:11px;color:var(--txt3);text-align:right;margin-top:3px;}
+
+/* week nav */
+.week-nav{display:flex;align-items:center;gap:8px;margin-bottom:1rem;}
+.week-nav button{background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--r);padding:6px 14px;font-size:13px;font-family:var(--font);color:var(--txt2);cursor:pointer;}
+.week-nav button:hover{background:var(--bg2);}
+.week-label{flex:1;text-align:center;font-size:14px;font-weight:500;}
+.today-btn{padding:6px 10px!important;font-size:12px!important;}
+
+/* week days */
+.week-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-bottom:1rem;}
+.day-pill{border-radius:var(--r);padding:6px 3px;text-align:center;background:var(--bg2);border:0.5px solid var(--brd);}
+.day-pill .dn{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.04em;}
+.day-pill .dd{font-size:15px;font-weight:500;color:var(--txt);}
+.day-pill .dv{font-size:10px;font-family:var(--mono);color:var(--txt2);margin-top:1px;}
+.day-pill.today{border-color:var(--accent);}
+.day-pill.today .dd{color:var(--accent);}
+
+/* tabs */
+.tabs{display:flex;gap:0;margin-bottom:1rem;border-bottom:0.5px solid var(--brd);}
+.tab{padding:8px 14px;font-size:13px;font-family:var(--font);background:none;border:none;border-bottom:2px solid transparent;color:var(--txt2);cursor:pointer;margin-bottom:-1px;}
+.tab.active{color:var(--txt);border-bottom-color:var(--txt);font-weight:500;}
+
+/* metrics */
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:1rem;}
+.metric{background:var(--bg2);border-radius:var(--r);padding:12px;}
+.metric label{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;}
+.metric .val{font-size:18px;font-weight:500;font-family:var(--mono);letter-spacing:-0.02em;}
+.metric .val.green{color:var(--accent);}
+.metric .val.red{color:var(--danger);}
+.metric .sub{font-size:10px;color:var(--txt3);margin-top:3px;}
+
+/* sections */
+.section{margin-bottom:1rem;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+.sec-hdr h3{font-size:11px;font-weight:500;color:var(--txt2);text-transform:uppercase;letter-spacing:0.07em;}
+.sec-hdr .sec-total{font-size:13px;font-family:var(--mono);color:var(--txt2);}
+
+/* entries */
+.entries{border:0.5px solid var(--brd);border-radius:var(--rl);overflow:hidden;}
+.entry{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;padding:10px 12px;border-bottom:0.5px solid var(--brd);background:var(--bg);}
+.entry:last-child{border-bottom:none;}
+.entry .ename{font-size:14px;color:var(--txt);}
+.entry .edate{font-size:11px;color:var(--txt3);}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.tag.casa{background:var(--accent-bg);color:var(--accent-txt);}
+.tag.bruno{background:var(--bruno-bg);color:var(--bruno-txt);}
+.tag.mari{background:var(--mari-bg);color:var(--mari-txt);}
+.eamt{font-family:var(--mono);font-size:14px;font-weight:500;text-align:right;}
+.del-btn{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:13px;padding:2px 4px;opacity:0;transition:opacity 0.15s;}
+.entry:hover .del-btn{opacity:1;}
+.del-btn:hover{color:var(--danger);}
+
+/* add row */
+.add-row{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:var(--bg2);border-top:0.5px solid var(--brd);}
+.add-row select,.add-row input{background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--r);padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--txt);}
+.add-row select{flex:1;min-width:120px;}
+.add-row input[type=text]{flex:1;min-width:100px;}
+.add-row input[type=number]{width:90px;text-align:right;font-family:var(--mono);}
+.add-row button{background:var(--txt);color:var(--bg);border:none;border-radius:var(--r);padding:7px 16px;font-size:13px;font-family:var(--font);cursor:pointer;font-weight:500;}
+.add-row button:hover{opacity:0.85;}
+.add-row button:active{transform:scale(0.97);}
+
+/* progress */
+.prog{height:3px;background:var(--bg3);border-radius:2px;margin-top:5px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:var(--accent);transition:width 0.3s;}
+.prog-fill.warn{background:var(--warn);}
+.prog-fill.over{background:var(--danger);}
+
+/* plan table */
+.plan-tbl{border:0.5px solid var(--brd);border-radius:var(--rl);overflow:hidden;}
+.plan-row{display:grid;grid-template-columns:1fr 100px 100px 80px;align-items:center;border-bottom:0.5px solid var(--brd);}
+.plan-row:last-child{border-bottom:none;}
+.plan-row.hdr{background:var(--bg2);}
+.plan-row.hdr span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.05em;padding:8px 10px;}
+.pc{padding:8px 10px;font-size:13px;color:var(--txt);}
+.pc.mono{font-family:var(--mono);font-size:12px;}
+.pc.good{color:var(--accent);font-family:var(--mono);font-size:12px;}
+.pc.bad{color:var(--danger);font-family:var(--mono);font-size:12px;}
+.pc input{width:100%;background:none;border:none;font-family:var(--mono);font-size:12px;color:var(--txt);padding:0;}
+.pc input:focus{outline:none;color:var(--accent);}
+
+/* bar chart */
+.bar-item{margin-bottom:12px;}
+.bar-lbl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.bar-lbl span{font-size:13px;color:var(--txt2);}
+.bar-lbl strong{font-family:var(--mono);font-size:13px;font-weight:500;}
+
+.empty{text-align:center;padding:1.5rem;color:var(--txt3);font-size:13px;}
+
+/* toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--txt);color:var(--bg);font-size:13px;padding:8px 18px;border-radius:20px;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;}
+
+/* loading overlay */
+.overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:100;}
+.overlay p{font-size:14px;color:var(--txt2);}
+.spinner{width:24px;height:24px;border:2px solid var(--brd2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <p>carregando dados...</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>Financeiro · Rossi</h1>
+      <p id="monthLabel"></p>
+    </div>
+    <div style="text-align:right">
+      <button class="sync-btn" id="syncBtn" onclick="syncNow()">↻ sincronizar</button>
+      <div class="sync-status" id="syncStatus">—</div>
+    </div>
+  </div>
+
+  <div class="week-nav">
+    <button onclick="changeWeek(-1)">←</button>
+    <span class="week-label" id="weekLabel"></span>
+    <button class="today-btn" onclick="goToday()">hoje</button>
+    <button onclick="changeWeek(1)">→</button>
+  </div>
+
+  <div class="week-days" id="weekDays"></div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-gastos" onclick="setTab('gastos')">gastos</button>
+    <button class="tab" id="tab-plano" onclick="setTab('plano')">plano</button>
+    <button class="tab" id="tab-resumo" onclick="setTab('resumo')">resumo</button>
+  </div>
+
+  <div id="tabContent"></div>
+</div>
+
+<script>
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyxzQ4HcoTyni3fUIkiaSzouCsuYFcaUKegYOudJrbrxXV-TJOF-qjR3IKuBwoeh2TanA/exec';
+
+const CATS = {
+  casa: ['Condomínio','Prestação da casa','Supermercado','Diarista','Luz','Gás','Internet','TV/streaming','Plano de saúde','Educação','Seguro carro','IPTU/IPVA','Prestação carro','Clube','Combustível','Farmácia','Veterinário','Futebol Leo','Médico/Terapia'],
+  bruno: ['Roupas Bruno','Lazer Bruno','Restaurante Bruno','Compras Bruno','Trabalho Bruno','Outros Bruno'],
+  mari: ['Roupas Marilia','Lazer Marilia','Esteticista','Restaurante Marilia','Compras Marilia','Outros Marilia']
+};
+
+const BUDGETS = {
+  'Condomínio':2575,'Prestação da casa':5200,'Supermercado':4000,'Diarista':2400,'Luz':600,'Gás':500,
+  'Internet':125,'TV/streaming':150,'Plano de saúde':1280,'Educação':6000,'Seguro carro':400,'IPTU/IPVA':545,
+  'Prestação carro':1250,'Clube':1200,'Combustível':600,'Farmácia':350,'Veterinário':250,'Futebol Leo':140,
+  'Médico/Terapia':2500,'Roupas Bruno':750,'Lazer Bruno':250,'Restaurante Bruno':400,'Compras Bruno':750,
+  'Trabalho Bruno':250,'Outros Bruno':200,'Roupas Marilia':750,'Lazer Marilia':250,'Esteticista':200,
+  'Restaurante Marilia':400,'Compras Marilia':750,'Outros Marilia':200
+};
+
+const INCOME = 47050;
+const INVEST = 3730;
+
+let state = { entries: {}, plans: {}, currentWeek: 0, activeTab: 'gastos' };
+let lastSync = null;
+let syncTimer = null;
+
+const fmt = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+const fmtS = n => (n>=0?'+':'')+Math.round(n).toLocaleString('pt-BR');
+
+function toast(msg, dur=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+async function loadFromSheets() {
+  try {
+    const r = await fetch(GS_URL + '?action=read');
+    const data = await r.json();
+    if (!data.ok || !data.data || data.data.length < 2) return;
+    const rows = data.data.slice(1);
+    const entries = {}, plans = {};
+    rows.forEach(row => {
+      const [type, key, id, cat, owner, amount, date] = row;
+      if (type === 'entry') {
+        if (!entries[key]) entries[key] = [];
+        entries[key].push({ id: String(id), cat, owner, amount: parseFloat(amount)||0, date });
+      } else if (type === 'plan') {
+        if (!plans[key]) plans[key] = {};
+        plans[key][cat] = parseFloat(amount)||0;
+      }
+    });
+    state.entries = entries;
+    state.plans = plans;
+    lastSync = new Date();
+    updateSyncStatus();
+  } catch(e) {
+    toast('erro ao carregar dados');
+  }
+}
+
+async function saveToSheets() {
+  const rows = [['type','key','id','cat','owner','amount','date']];
+  Object.entries(state.entries).forEach(([wk, es]) => {
+    es.forEach(e => rows.push(['entry', wk, e.id, e.cat, e.owner, e.amount, e.date]));
+  });
+  Object.entries(state.plans).forEach(([mk, cats]) => {
+    Object.entries(cats).forEach(([cat, amount]) => {
+      rows.push(['plan', mk, '', cat, '', amount, '']);
+    });
+  });
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'write', rows }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    lastSync = new Date();
+    updateSyncStatus();
+  } catch(e) {
+    toast('erro ao salvar — tente sincronizar');
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveToSheets, 1500);
+}
+
+async function syncNow() {
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  btn.textContent = '↻ sincronizando...';
+  await loadFromSheets();
+  render();
+  btn.classList.remove('syncing');
+  btn.textContent = '↻ sincronizar';
+  toast('dados atualizados');
+}
+
+function updateSyncStatus() {
+  const el = document.getElementById('syncStatus');
+  if (!lastSync) { el.textContent = '—'; return; }
+  const h = lastSync.getHours(), m = String(lastSync.getMinutes()).padStart(2,'0');
+  el.textContent = `sincronizado às ${h}:${m}`;
+}
+
+function getMonday(offset=0) {
+  const now = new Date();
+  const day = now.getDay()||7;
+  const m = new Date(now);
+  m.setDate(now.getDate()-day+1+offset*7);
+  m.setHours(0,0,0,0);
+  return m;
+}
+
+function weekKey(offset) { return getMonday(offset).toISOString().slice(0,10); }
+function monthKey() { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
+
+function changeWeek(d) { state.currentWeek+=d; render(); }
+function goToday() { state.currentWeek=0; render(); }
+
+function setTab(t) {
+  state.activeTab = t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  renderTab();
+}
+
+function render() {
+  const m = getMonday(state.currentWeek);
+  const end = new Date(m); end.setDate(m.getDate()+6);
+  const opts = {day:'numeric',month:'short'};
+  document.getElementById('weekLabel').textContent =
+    m.toLocaleDateString('pt-BR',opts)+' – '+end.toLocaleDateString('pt-BR',opts);
+  const now = new Date();
+  document.getElementById('monthLabel').textContent =
+    now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  renderWeekDays();
+  renderTab();
+}
+
+function renderWeekDays() {
+  const m = getMonday(state.currentWeek);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const wk = weekKey(state.currentWeek);
+  const entries = state.entries[wk]||[];
+  const days = ['seg','ter','qua','qui','sex','sáb','dom'];
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(m); d.setDate(m.getDate()+i);
+    const dStr = d.toISOString().slice(0,10);
+    const tot = entries.filter(e=>e.date===dStr).reduce((a,e)=>a+e.amount,0);
+    const isToday = d.getTime()===today.getTime();
+    html += `<div class="day-pill${isToday?' today':''}">
+      <div class="dn">${days[i]}</div>
+      <div class="dd">${d.getDate()}</div>
+      <div class="dv">${tot>0?'R$'+Math.round(tot/1000*10)/10+'k':''}</div>
+    </div>`;
+  }
+  document.getElementById('weekDays').innerHTML = html;
+}
+
+function renderTab() {
+  const c = document.getElementById('tabContent');
+  if(state.activeTab==='gastos') c.innerHTML = renderGastos();
+  else if(state.activeTab==='plano') c.innerHTML = renderPlano();
+  else c.innerHTML = renderResumo();
+  attachListeners();
+}
+
+function renderGastos() {
+  const wk = weekKey(state.currentWeek);
+  const entries = state.entries[wk]||[];
+  const mk = monthKey();
+  const allMonth = Object.entries(state.entries).filter(([k])=>k.startsWith(mk)).flatMap(([,v])=>v);
+
+  const totCasa = entries.filter(e=>e.owner==='casa').reduce((a,e)=>a+e.amount,0);
+  const totBruno = entries.filter(e=>e.owner==='bruno').reduce((a,e)=>a+e.amount,0);
+  const totMari = entries.filter(e=>e.owner==='mari').reduce((a,e)=>a+e.amount,0);
+  const totSem = totCasa+totBruno+totMari;
+  const totMes = allMonth.reduce((a,e)=>a+e.amount,0);
+  const saldo = INCOME-INVEST-totMes;
+
+  const owners = [
+    {key:'casa',label:'Casa',tagClass:'casa'},
+    {key:'bruno',label:'Bruno',tagClass:'bruno'},
+    {key:'mari',label:'Marilia',tagClass:'mari'}
+  ];
+
+  let sections = '';
+  for(const o of owners){
+    const oes = entries.filter(e=>e.owner===o.key);
+    const tot = oes.reduce((a,e)=>a+e.amount,0);
+    const rows = oes.map(e=>{
+      const d = e.date ? e.date.slice(5).replace('-','/') : '';
+      return `<div class="entry">
+        <div><div class="ename">${e.cat}</div><div class="edate">${d}</div></div>
+        <span class="tag ${o.tagClass}">${o.label==='Casa'?'casa':o.label.toLowerCase()}</span>
+        <span class="eamt">${fmt(e.amount)}</span>
+        <button class="del-btn" onclick="deleteEntry('${wk}','${e.id}')">✕</button>
+      </div>`;
+    }).join('');
+
+    const allCats = CATS[o.key].map(c=>`<option value="${c}">${c}</option>`).join('');
+
+    sections += `<div class="section">
+      <div class="sec-hdr">
+        <h3>${o.label==='Casa'?'casa · compartilhado':`pessoal · ${o.label.toLowerCase()}`}</h3>
+        <span class="sec-total">${tot>0?fmt(tot):''}</span>
+      </div>
+      <div class="entries">
+        ${rows||`<div class="empty">nenhum lançamento esta semana</div>`}
+        <div class="add-row">
+          <select class="cat-sel" data-owner="${o.key}">
+            ${allCats}
+            <option value="__outro__">outro...</option>
+          </select>
+          <input type="text" class="custom-cat" data-owner="${o.key}" placeholder="descreva o gasto" style="display:none"/>
+          <input type="number" class="amt-inp" data-owner="${o.key}" placeholder="R$ 0" min="0" step="1"/>
+          <button onclick="addEntry('${o.key}','${wk}')">+</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="summary-grid">
+    <div class="metric"><label>semana</label><div class="val">${fmt(totSem)}</div><div class="sub">lançado</div></div>
+    <div class="metric"><label>mês até agora</label><div class="val">${fmt(totMes)}</div><div class="sub">de ${fmt(INCOME-INVEST)}</div></div>
+    <div class="metric"><label>saldo estimado</label><div class="val ${saldo>=0?'green':'red'}">${fmtS(saldo)}</div><div class="sub">${saldo>=0?'no azul':'atenção'}</div></div>
+  </div>${sections}`;
+}
+
+function renderPlano() {
+  const mk = monthKey();
+  const plans = state.plans[mk]||{};
+  const allMonth = Object.entries(state.entries).filter(([k])=>k.startsWith(mk)).flatMap(([,v])=>v);
+  const allCats = [...CATS.casa,...CATS.bruno,...CATS.mari];
+  const rows = allCats.map(cat=>{
+    const budget = plans[cat]!==undefined ? plans[cat] : (BUDGETS[cat]||0);
+    const spent = allMonth.filter(e=>e.cat===cat).reduce((a,e)=>a+e.amount,0);
+    const diff = budget-spent;
+    const pct = budget>0?Math.min(spent/budget*100,100):0;
+    const owner = CATS.casa.includes(cat)?'casa':CATS.bruno.includes(cat)?'bruno':'mari';
+    return {cat,budget,spent,diff,pct,owner};
+  }).filter(r=>r.budget>0||r.spent>0);
+
+  const totalPlan = rows.reduce((a,r)=>a+r.budget,0);
+  const totalSpent = rows.reduce((a,r)=>a+r.spent,0);
+
+  const rRows = rows.map(r=>{
+    const fc = r.pct>=100?'over':r.pct>=80?'warn':'';
+    const dc = r.diff>=0?'good':'bad';
+    const lbl = r.owner==='casa'?'casa':r.owner==='bruno'?'B':'M';
+    return `<div class="plan-row">
+      <div class="pc"><span class="tag ${r.owner}" style="margin-right:5px">${lbl}</span>${r.cat}
+        <div class="prog"><div class="prog-fill ${fc}" style="width:${Math.round(r.pct)}%"></div></div>
+      </div>
+      <div class="pc"><input type="number" value="${Math.round(r.budget)}" onchange="updatePlan('${r.cat}',this.value,'${mk}')"/></div>
+      <div class="pc mono">${fmt(r.spent)}</div>
+      <div class="pc ${dc}">${fmtS(r.diff)}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="summary-grid">
+    <div class="metric"><label>disponível</label><div class="val">${fmt(INCOME-INVEST)}</div><div class="sub">após investimentos</div></div>
+    <div class="metric"><label>planejado</label><div class="val ${totalPlan>INCOME-INVEST?'red':''}">${fmt(totalPlan)}</div><div class="sub">${totalPlan>INCOME-INVEST?'acima da receita':'dentro do limite'}</div></div>
+    <div class="metric"><label>gasto até agora</label><div class="val">${fmt(totalSpent)}</div><div class="sub">${Math.round(totalSpent/(totalPlan||1)*100)}% do plano</div></div>
+  </div>
+  <p style="font-size:11px;color:var(--txt3);margin-bottom:8px">toque no valor planejado para editar</p>
+  <div class="plan-tbl">
+    <div class="plan-row hdr"><span>categoria</span><span>planejado</span><span>gasto</span><span>saldo</span></div>
+    ${rRows||'<div class="empty">nenhum dado ainda</div>'}
+  </div>`;
+}
+
+function renderResumo() {
+  const mk = monthKey();
+  const allMonth = Object.entries(state.entries).filter(([k])=>k.startsWith(mk)).flatMap(([,v])=>v);
+  const totCasa = allMonth.filter(e=>e.owner==='casa').reduce((a,e)=>a+e.amount,0);
+  const totBruno = allMonth.filter(e=>e.owner==='bruno').reduce((a,e)=>a+e.amount,0);
+  const totMari = allMonth.filter(e=>e.owner==='mari').reduce((a,e)=>a+e.amount,0);
+  const total = totCasa+totBruno+totMari;
+  const saldo = INCOME-INVEST-total;
+
+  const bars = [
+    {label:'Casa (compartilhado)',val:totCasa,color:'var(--accent)'},
+    {label:'Bruno (pessoal)',val:totBruno,color:'var(--bruno)'},
+    {label:'Marilia (pessoal)',val:totMari,color:'var(--mari)'},
+  ];
+
+  const barsHtml = bars.map(b=>{
+    const pct = total>0?Math.round(b.val/total*100):0;
+    return `<div class="bar-item">
+      <div class="bar-lbl"><span>${b.label}</span><strong>${fmt(b.val)} <span style="font-size:11px;color:var(--txt3);font-weight:400">${pct}%</span></strong></div>
+      <div class="prog" style="height:6px"><div class="prog-fill" style="width:${pct}%;background:${b.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  const byCat = {};
+  allMonth.forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+e.amount; });
+  const topCats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topRows = topCats.map(([cat,val])=>{
+    const owner = CATS.casa.includes(cat)?'casa':CATS.bruno.includes(cat)?'bruno':'mari';
+    const lbl = owner==='casa'?'casa':owner==='bruno'?'Bruno':'Marilia';
+    return `<div class="entry">
+      <span class="ename">${cat}</span>
+      <span class="tag ${owner}">${lbl}</span>
+      <span class="eamt">${fmt(val)}</span>
+      <span></span>
+    </div>`;
+  }).join('');
+
+  return `<div class="summary-grid">
+    <div class="metric"><label>receita líq.</label><div class="val">${fmt(INCOME-INVEST)}</div><div class="sub">após invest.</div></div>
+    <div class="metric"><label>total gasto</label><div class="val">${fmt(total)}</div><div class="sub">${Math.round(total/(INCOME-INVEST||1)*100)}% da receita</div></div>
+    <div class="metric"><label>saldo do mês</label><div class="val ${saldo>=0?'green':'red'}">${fmtS(saldo)}</div><div class="sub">${saldo>=0?'no azul':'atenção'}</div></div>
+  </div>
+  <div style="margin-bottom:1.25rem">${barsHtml}</div>
+  <div class="sec-hdr"><h3>maiores gastos do mês</h3></div>
+  <div class="entries">${topRows||'<div class="empty">nenhum lançamento este mês</div>'}</div>`;
+}
+
+function addEntry(owner, wk) {
+  const sel = document.querySelector(`.cat-sel[data-owner="${owner}"]`);
+  const custom = document.querySelector(`.custom-cat[data-owner="${owner}"]`);
+  const amt = document.querySelector(`.amt-inp[data-owner="${owner}"]`);
+  const cat = sel.value==='__outro__' ? custom.value.trim() : sel.value;
+  const amount = parseFloat(amt.value);
+  if(!cat||!amount||amount<=0) { toast('preencha categoria e valor'); return; }
+  if(!state.entries[wk]) state.entries[wk]=[];
+  const today = new Date().toISOString().slice(0,10);
+  state.entries[wk].push({id:Date.now()+'',cat,owner,amount,date:today});
+  amt.value='';
+  toast('lançado');
+  scheduleSave();
+  renderTab();
+  renderWeekDays();
+}
+
+function deleteEntry(wk, id) {
+  if(!state.entries[wk]) return;
+  state.entries[wk] = state.entries[wk].filter(e=>e.id!==id);
+  scheduleSave();
+  renderTab();
+  renderWeekDays();
+}
+
+function updatePlan(cat, val, mk) {
+  if(!state.plans[mk]) state.plans[mk]={};
+  state.plans[mk][cat] = parseFloat(val)||0;
+  scheduleSave();
+}
+
+function attachListeners() {
+  document.querySelectorAll('.cat-sel').forEach(sel=>{
+    const owner = sel.dataset.owner;
+    const custom = document.querySelector(`.custom-cat[data-owner="${owner}"]`);
+    sel.addEventListener('change',()=>{
+      if(custom) custom.style.display = sel.value==='__outro__'?'block':'none';
+    });
+  });
+  document.querySelectorAll('.amt-inp').forEach(inp=>{
+    const owner = inp.dataset.owner;
+    const wk = weekKey(state.currentWeek);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') addEntry(owner,wk); });
+  });
+}
+
+async function init() {
+  await loadFromSheets();
+  document.getElementById('overlay').style.display='none';
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
